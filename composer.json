@@ -14,8 +14,7 @@
   "require-dev": {
     "orchestra/testbench": "^9.0|^10.0",
     "pestphp/pest": "^3.8",
-    "pestphp/pest-plugin-drift": "^3.0",
-    "pestphp/pest-plugin-laravel": "^3.0"
+    "pestphp/pest-plugin-drift": "^3.0"
   },
   "scripts": {
     "test": "php vendor/bin/pest"
