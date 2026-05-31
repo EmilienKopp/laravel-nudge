@@ -35,17 +35,23 @@ abstract class ActionableNotification extends Notification
 
     public function toDatabase(object $notifiable): array
     {
+        $actionKey = $this->useActionKey() ?? $this->pendingActionKey;
+
         return [
             ...$this->withData($notifiable),
-            '_action_key'    => $this->pendingActionKey,
+            '_action_key' => $actionKey,
             '_action_params' => $this->pendingActionParams,
-            '_target_url'    => $this->pendingTargetUrl,
+            '_target_url' => $this->pendingTargetUrl,
         ];
     }
-
 
     protected function withData(object $notifiable): array
     {
         return [];
+    }
+
+    protected function useActionKey(): ?string
+    {
+        return null;
     }
 }
