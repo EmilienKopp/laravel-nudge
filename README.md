@@ -1,5 +1,12 @@
 # Laravel Nudge
 
+
+![Tests](https://img.shields.io/github/actions/workflow/status/emilienkopp/laravel-nudge/tests.yml?label=tests)
+![PHP Version](https://img.shields.io/badge/php-^8.2-blue.svg?style=flat-square)
+![Laravel Version](https://img.shields.io/badge/laravel-^11.0-orange.svg?style=flat-square)
+[![Total Downloads](https://img.shields.io/packagist/dt/splitstack/laravel-nudge.svg?style=flat-square)](https://packagist.org/packages/splitstack/laravel-nudge)
+
+
 Give notifications a lifecycle. A notification declares the action it is waiting on; when that action runs anywhere in your application, the notification resolves itself — no manual wiring required.
 
 ## Installation
