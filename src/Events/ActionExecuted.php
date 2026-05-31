@@ -12,6 +12,6 @@ final readonly class ActionExecuted
 
     public function __construct(
         public string $actionKey,
-        public \Illuminate\Contracts\Support\Arrayable $params,
+        public array|\Illuminate\Contracts\Support\Arrayable $params,
     ) {}
 }

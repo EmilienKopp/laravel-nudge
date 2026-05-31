@@ -10,7 +10,7 @@ use Splitstack\Nudge\Events\ActionExecuted;
 
 trait DispatchesActionExecuted
 {
-    public function execute(\Illuminate\Contracts\Support\Arrayable $params): mixed
+    public function execute(array|\Illuminate\Contracts\Support\Arrayable $params): mixed
     {
         // Guard against handle being undefined function
         if (! method_exists($this, 'handle')) {
