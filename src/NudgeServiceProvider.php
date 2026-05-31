@@ -24,8 +24,8 @@ class NudgeServiceProvider extends ServiceProvider
             ], 'nudge-config');
         }
 
-        $listener = config('nudge.queued_listeners', false) 
-            ? ResolveNotificationsOnActionQueued::class 
+        $listener = config('nudge.queued_listeners', false)
+            ? ResolveNotificationsOnActionQueued::class
             : ResolveNotificationsOnActionSync::class;
 
         Event::listen(ActionExecuted::class, $listener);

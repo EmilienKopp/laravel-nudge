@@ -11,18 +11,12 @@ abstract class ActionableNotification extends Notification
     private ?string $pendingActionKey = null;
 
     private array $pendingActionParams = [];
+
     private ?string $pendingTargetUrl = null;
 
     public function forAction(string $actionKey, array $params = []): static
     {
         $this->pendingActionKey = $actionKey;
-        $this->pendingActionParams = $params;
-
-        return $this;
-    }
-
-    public function withParams(array $params): static
-    {
         $this->pendingActionParams = $params;
 
         return $this;

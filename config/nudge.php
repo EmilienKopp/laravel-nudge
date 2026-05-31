@@ -1,5 +1,6 @@
 <?php
 
+declare(strict_types=1);
 
 return [
     /*
@@ -15,7 +16,6 @@ return [
     'notification_model' => Splitstack\Nudge\Models\Notification::class,
     // 'notification_model' => Splitstack\Nudge\Models\TenantAwareNotification::class, // Plug-and-play support for spatie/laravel-multitenancy
 
-
     /*
     |--------------------------------------------------------------------------
     | Queued Listeners
@@ -25,4 +25,22 @@ return [
     |
     */
     'queued_listeners' => false,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Broadcast Notifications
+    |--------------------------------------------------------------------------
+    | If you want to broadcast notification resolutions for real-time UI updates, set this to true.
+    |
+    */
+    'broadcast_notifications' => false,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Broadcast Channel
+    |--------------------------------------------------------------------------
+    | If you want to broadcast notification resolutions for real-time UI updates, set a channel name here.
+    |
+    */
+    'broadcast_channel' => 'nudge-notifications',
 ];
