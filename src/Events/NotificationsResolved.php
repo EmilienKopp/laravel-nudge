@@ -18,7 +18,7 @@ final readonly class NotificationsResolved implements ShouldBroadcast
 
     public function broadcastAs(): string
     {
-        return 'notifications.resolved';
+        return 'nudge.resolved';
     }
 
     public function broadcastOn(): array
