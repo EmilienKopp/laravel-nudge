@@ -7,7 +7,7 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/splitstack/laravel-nudge.svg?style=flat-square)](https://packagist.org/packages/splitstack/laravel-nudge)
 
 <p align="center">
-![laravel-nudge](./art/Nudge-LOGO-round-sm.png)
+  <img src="./art/Nudge-LOGO-round-sm.png" alt="laravel-nudge" width="200">
 </p>
 
 Give notifications a lifecycle. A notification declares the action it is waiting on; when that action runs anywhere in your application, the notification resolves itself — no manual wiring required.
