@@ -11,7 +11,8 @@ readonly class ResolveNotificationsOnAction
 {
     public function handle(ActionExecuted $event): void
     {
-        $candidates = DatabaseNotification::query()
+        $model = config('nudge.notification_model');
+        $candidates = $model::query()
             ->where('data->_action_key', $event->actionKey)
             ->whereNull('resolved_at')
             ->get();
