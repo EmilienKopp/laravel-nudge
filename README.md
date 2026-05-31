@@ -79,21 +79,9 @@ ActionExecuted::dispatch('github.install', ['user_id' => $user->id]);
 
 ## Notifications
 
-Extend `ActionableNotification` and call `forAction()` when sending:
+Extend `ActionableNotification` and supply the action key either via `forAction()` at call site or by overriding `useActionKey()` on the class.
 
-```php
-use Splitstack\Nudge\Notifications\ActionableNotification;
-
-class GitHubSetupReminder extends ActionableNotification
-{
-    protected function withData(object $notifiable): array
-    {
-        return [
-            'message' => 'Connect your GitHub account to continue.',
-        ];
-    }
-}
-```
+**Option A — `forAction()` at call site** (action key decided by the caller):
 
 ```php
 $user->notify(
@@ -101,7 +89,32 @@ $user->notify(
 );
 ```
 
-`withData()` is optional — omit it if your notification needs no payload beyond the action metadata.
+**Option B — `useActionKey()` on the class** (action key baked into the notification):
+
+```php
+class AppNotification extends ActionableNotification
+{
+    public function __construct(
+        public readonly string $message,
+        public readonly ?string $actionKey = null,
+    ) {}
+
+    protected function withData(object $notifiable): array
+    {
+        return ['message' => $this->message];
+    }
+
+    public function useActionKey(): ?string
+    {
+        return $this->actionKey;
+    }
+}
+
+// sending:
+$user->notify(new AppNotification('Connect your GitHub account.', 'github.install'));
+```
+
+`withData()` is optional — omit it if your notification needs no payload beyond the action metadata. If both `useActionKey()` and `forAction()` are used, `useActionKey()` takes precedence.
 
 ### Param matching
 
