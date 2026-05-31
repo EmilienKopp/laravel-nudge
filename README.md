@@ -146,6 +146,32 @@ DatabaseNotification::whereNull('resolved_at')->get();
 DatabaseNotification::whereNotNull('resolved_at')->get();
 ```
 
+## Caveats
+
+### Avoid sending notifications inside controller methods that can be hit multiple times
+
+Some middleware or frontend patterns cause controller methods to be invoked more than once per user interaction. A well-known case is [Inertia.js deferred props](https://inertiajs.com/deferred-props): a `HandleInertiaRequests` middleware that uses `Inertia::defer()` triggers a second request to the same route, calling the controller twice. If `$user->notify(...)` is in that controller, the same notification gets stored twice.
+
+The safer placement is inside a dedicated action, a queued job, an observer, or a service — anywhere outside the HTTP layer that can be hit multiple times.
+
+```php
+// risky: controller may be called more than once
+public function dashboard(Request $request): Response
+{
+    $request->user()->notify(new SomeReminder); // could fire twice
+    return Inertia::render('Dashboard');
+}
+
+// safer: notification lives outside the repeatedly-hit method
+public function dashboard(Request $request): Response
+{
+    SendOnboardingReminder::dispatchIf(
+        ! $request->user()->hasCompletedOnboarding()
+    );
+    return Inertia::render('Dashboard');
+}
+```
+
 ## Requirements
 
 - PHP 8.2+
