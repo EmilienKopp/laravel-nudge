@@ -146,6 +146,34 @@ DatabaseNotification::whereNull('resolved_at')->get();
 DatabaseNotification::whereNotNull('resolved_at')->get();
 ```
 
+## Migrating an existing notification class
+
+If you already have a notification with a `toDatabase()` method and you swap `extends Notification` for `extends ActionableNotification`, **do not keep the `toDatabase()` override**. `ActionableNotification::toDatabase()` is what injects `_action_key` and `_action_params` into the stored payload — overriding it silently strips that metadata and the notification will never resolve.
+
+Replace `toDatabase()` with `withData()` instead:
+
+```php
+// before — toDatabase() override will break resolution
+class MyNotification extends ActionableNotification
+{
+    public function toDatabase(object $notifiable): array
+    {
+        return ['message' => 'Do the thing.'];
+    }
+}
+
+// after
+class MyNotification extends ActionableNotification
+{
+    protected function withData(object $notifiable): array
+    {
+        return ['message' => 'Do the thing.'];
+    }
+}
+```
+
+`withData()` is merged into the final payload by the parent; your data and the action metadata both end up in the database.
+
 ## Caveats
 
 ### Avoid sending notifications inside controller methods that can be hit multiple times
