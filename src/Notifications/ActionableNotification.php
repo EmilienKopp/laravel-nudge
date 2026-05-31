@@ -21,6 +21,13 @@ abstract class ActionableNotification extends Notification
         return $this;
     }
 
+    public function withParams(array $params): static
+    {
+        $this->pendingActionParams = $params;
+
+        return $this;
+    }
+
     public function targetUrl(string $url): static
     {
         $this->pendingTargetUrl = $url;

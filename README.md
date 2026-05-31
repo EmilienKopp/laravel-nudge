@@ -110,8 +110,14 @@ class AppNotification extends ActionableNotification
     }
 }
 
-// sending:
+// sending (no params):
 $user->notify(new AppNotification('Connect your GitHub account.', 'github.install'));
+
+// sending (with params):
+$user->notify(
+    (new AppNotification('Connect your GitHub account.', 'github.install'))
+        ->withParams(['user_id' => $user->id])
+);
 ```
 
 `withData()` is optional — omit it if your notification needs no payload beyond the action metadata. If both `useActionKey()` and `forAction()` are used, `useActionKey()` takes precedence.
