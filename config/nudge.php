@@ -13,7 +13,7 @@ return [
     */
 
     'notification_model' => Splitstack\Nudge\Models\Notification::class,
-    // 'notification_model' => Splitstack\Nudge\Models\TenantAwareNotification::class // Plug-and-play support for spatie/laravel-multitenancy
+    // 'notification_model' => Splitstack\Nudge\Models\TenantAwareNotification::class, // Plug-and-play support for spatie/laravel-multitenancy
 
 
     /*
