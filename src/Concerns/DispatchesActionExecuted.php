@@ -4,25 +4,32 @@ declare(strict_types=1);
 
 namespace Splitstack\Nudge\Concerns;
 
-use LogicException;
+use Splitstack\Nudge\Attributes\Handles;
 use Splitstack\Nudge\Contracts\ResolvableAction;
 use Splitstack\Nudge\Events\ActionExecuted;
 
 trait DispatchesActionExecuted
 {
-    public function execute(array|\Illuminate\Contracts\Support\Arrayable $params): mixed
+    public function nudge(array|\Illuminate\Contracts\Support\Arrayable $params = []): mixed
     {
-        // Guard against handle being undefined function
-        if (! method_exists($this, 'handle')) {
-            throw new LogicException('Classes using DispatchesActionExecuted must implement a handle method.');
-        }
-
-        $result = $this->handle($params);
+        $method = $this->resolveHandlerMethod();
+        $result = $this->$method($params);
 
         if ($this instanceof ResolvableAction) {
             ActionExecuted::dispatch($this->actionKey(), $params);
         }
 
         return $result;
+    }
+
+    private function resolveHandlerMethod(): string
+    {
+        foreach ((new \ReflectionClass($this))->getMethods() as $method) {
+            if ($method->getAttributes(Handles::class)) {
+                return $method->getName();
+            }
+        }
+
+        throw new \RuntimeException(static::class . ' has no method marked with #[Handles]');
     }
 }
