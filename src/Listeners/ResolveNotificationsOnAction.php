@@ -29,19 +29,26 @@ readonly class ResolveNotificationsOnAction
         }
     }
 
-    private function paramsMatch(iterable $stored, iterable $executed): bool
+    private function paramsMatch(iterable $stored, iterable $executed, bool $deep = false): bool
     {
-        $validCandidate = $this->isValidCandidate($stored, $executed);
-
-        if (! $validCandidate) {
+        if (! $this->isValidCandidate($stored, $executed)) {
             return false;
         }
 
         $executed = $executed instanceof \Illuminate\Contracts\Support\Arrayable ? $executed->toArray() : (array) $executed;
-        $stored = $stored instanceof \Illuminate\Contracts\Support\Arrayable ? $stored->toArray() : (array) $stored;
+        $stored   = $stored   instanceof \Illuminate\Contracts\Support\Arrayable ? $stored->toArray()   : (array) $stored;
+        $deep     = $deep || config('nudge.match_params') === 'deep';
 
         foreach ($stored as $key => $value) {
-            if (! array_key_exists($key, $executed) || $executed[$key] !== $value) {
+            if (! array_key_exists($key, $executed)) {
+                return false;
+            }
+
+            if ($deep && is_array($value) && is_array($executed[$key])) {
+                if (! $this->paramsMatch($value, $executed[$key], deep: true)) {
+                    return false;
+                }
+            } elseif ($executed[$key] !== $value) {
                 return false;
             }
         }

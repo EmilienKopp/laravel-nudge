@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Collection;
 use Splitstack\Nudge\Listeners\ResolveNotificationsOnAction;
+use Splitstack\Nudge\Tests\TestCase;
+
+uses(TestCase::class);
 
 it('matches when stored params are a subset of executed params', function () {
     $listener = new ResolveNotificationsOnAction();
@@ -61,6 +64,42 @@ it('matches when executed params is an Arrayable', function () {
     $executed = Collection::make(['user_id' => 5, 'installation_id' => 88]);
 
     expect($match(['user_id' => 5], $executed))->toBeTrue();
+});
+
+it('shallow match does not recurse into nested arrays', function () {
+    $listener = new ResolveNotificationsOnAction();
+    $match = (fn ($s, $e) => $this->paramsMatch($s, $e))->bindTo($listener, $listener);
+
+    config(['nudge.match_params' => 'shallow']);
+
+    expect($match(
+        ['installation' => ['id' => 88]],
+        ['installation' => ['id' => 88, 'account' => 'acme'], 'user_id' => 5]
+    ))->toBeFalse();
+});
+
+it('deep match recursively checks nested arrays as subsets', function () {
+    $listener = new ResolveNotificationsOnAction();
+    $match = (fn ($s, $e) => $this->paramsMatch($s, $e))->bindTo($listener, $listener);
+
+    config(['nudge.match_params' => 'deep']);
+
+    expect($match(
+        ['installation' => ['id' => 88]],
+        ['installation' => ['id' => 88, 'account' => 'acme'], 'user_id' => 5]
+    ))->toBeTrue();
+});
+
+it('deep match rejects when a nested value differs', function () {
+    $listener = new ResolveNotificationsOnAction();
+    $match = (fn ($s, $e) => $this->paramsMatch($s, $e))->bindTo($listener, $listener);
+
+    config(['nudge.match_params' => 'deep']);
+
+    expect($match(
+        ['installation' => ['id' => 99]],
+        ['installation' => ['id' => 88, 'account' => 'acme']]
+    ))->toBeFalse();
 });
 
 it('matches when stored params is an Arrayable', function () {

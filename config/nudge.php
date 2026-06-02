@@ -18,6 +18,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Param Matching Strategy
+    |--------------------------------------------------------------------------
+    | 'shallow' (default) checks only top-level keys.
+    | 'deep' recursively checks nested arrays as subsets, useful when action
+    | params contain structured data like DTOs or nested arrays.
+    |
+    | shallow: ['user_id' => 5]          matches ['user_id' => 5, 'extra' => 1]
+    | deep:    ['meta' => ['id' => 5]]   matches ['meta' => ['id' => 5, 'name' => 'x']]
+    |
+    */
+    'match_params' => 'shallow',
+
+    /*
+    |--------------------------------------------------------------------------
     | Queued Listeners
     |--------------------------------------------------------------------------
     | By default, the listeners that resolve notifications on action execution
