@@ -38,8 +38,8 @@ User is notified to install the GitHub App
   └─ notification stored with action_key = "github.install", user_id = 5
 
 User installs the GitHub App (via webhook, OAuth callback, CLI — anywhere)
-  └─ InstallGitHubApp::execute(['user_id' => 5, 'installation_id' => 88])
-       └─ fires ActionExecuted("github.install", [...])
+  └─ (new InstallGitHubApp)->handle(['user_id' => 5, 'installation_id' => 88])
+       └─ $this->nudge($params) fires ActionExecuted("github.install", [...])
             └─ listener finds the notification, stamps resolved_at
 ```
 
@@ -47,7 +47,7 @@ The controller, the webhook handler, and the notification have no knowledge of e
 
 ## Actions
 
-Implement `ResolvableAction` and use the `DispatchesActionExecuted` trait. Call `execute()` publicly; put your logic in `handle()`.
+Implement `ResolvableAction`, use the `DispatchesActionExecuted` trait, and call `$this->nudge($params)` from within your handler when the action completes. The method can be named anything — no renaming of existing code required.
 
 ```php
 use Splitstack\Nudge\Contracts\ResolvableAction;
@@ -62,14 +62,22 @@ class InstallGitHubApp implements ResolvableAction
         return 'github.install';
     }
 
-    protected function handle(array $params): void
+    public function handle(array $params): void
     {
-        // installation logic
+        // your existing logic, name this method whatever you want
+
+        $this->nudge($params); // fires ActionExecuted when the action completes
     }
 }
 ```
 
-The `ActionExecuted` event is dispatched automatically after `handle()` returns. If `handle()` throws, the event is never fired.
+Call it however you normally would — no wrapper method needed:
+
+```php
+(new InstallGitHubApp)->handle(['user_id' => $user->id, 'installation_id' => 88]);
+```
+
+`nudge()` only fires if the class implements `ResolvableAction`. You can use the trait on non-resolvable actions too — `nudge()` becomes a no-op.
 
 You can also dispatch the event manually as an escape hatch — useful for actions you don't own:
 
@@ -194,6 +202,46 @@ class MyNotification extends ActionableNotification
 ```
 
 `withData()` is merged into the final payload by the parent; your data and the action metadata both end up in the database.
+
+## Upgrading from < 0.6.0
+
+The `execute()` entry point and the requirement to name your handler `handle()` have been removed. The new design lets you keep whatever method name you already have — just add `$this->nudge($params)` inside it.
+
+**Before:**
+```php
+class InstallGitHubApp implements ResolvableAction
+{
+    use DispatchesActionExecuted;
+
+    protected function handle(array $params): void
+    {
+        // logic
+    }
+}
+
+// call site
+(new InstallGitHubApp)->execute($params);
+```
+
+**After:**
+```php
+class InstallGitHubApp implements ResolvableAction
+{
+    use DispatchesActionExecuted;
+
+    public function handle(array $params): void  // or vodkatonic(), or __invoke(), or anything
+    {
+        // same logic, untouched
+
+        $this->nudge($params);
+    }
+}
+
+// call site — unchanged, call your method directly
+(new InstallGitHubApp)->handle($params);
+```
+
+`execute()` still exists but is deprecated and will be removed in a future release. It emits `E_USER_DEPRECATED` to help you find remaining call sites.
 
 ## Caveats
 

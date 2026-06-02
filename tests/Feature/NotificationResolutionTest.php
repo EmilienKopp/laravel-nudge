@@ -21,7 +21,7 @@ it('resolves a notification when its action is executed with matching params', f
 
     expect($this->user->pendingNotifications()->count())->toBe(1);
 
-    (new InstallGitHubApp)->nudge(['user_id' => $this->user->id, 'installation_id' => 88]);
+    (new InstallGitHubApp)->handle(['user_id' => $this->user->id, 'installation_id' => 88]);
 
     expect($this->user->pendingNotifications()->count())->toBe(0)
         ->and($this->user->resolvedNotifications()->count())->toBe(1);
@@ -32,7 +32,7 @@ it('does not resolve a notification when params do not match', function () {
         (new GitHubSetupReminder)->forAction('github.install', ['user_id' => $this->user->id])
     );
 
-    (new InstallGitHubApp)->nudge(['user_id' => 999, 'installation_id' => 88]);
+    (new InstallGitHubApp)->handle(['user_id' => 999, 'installation_id' => 88]);
 
     expect($this->user->pendingNotifications()->count())->toBe(1);
 });
@@ -67,7 +67,7 @@ it('only resolves notifications whose params are a subset of the executed params
         (new GitHubSetupReminder)->forAction('github.install', ['user_id' => $otherUser->id])
     );
 
-    (new InstallGitHubApp)->nudge(['user_id' => $this->user->id, 'installation_id' => 88]);
+    (new InstallGitHubApp)->handle(['user_id' => $this->user->id, 'installation_id' => 88]);
 
     expect($this->user->resolvedNotifications()->count())->toBe(1)
         ->and($otherUser->pendingNotifications()->count())->toBe(1);
@@ -81,7 +81,7 @@ it('resolves all pending notifications for the same action and params', function
         (new GitHubSetupReminder)->forAction('github.install', ['user_id' => $this->user->id])
     );
 
-    (new InstallGitHubApp)->nudge(['user_id' => $this->user->id]);
+    (new InstallGitHubApp)->handle(['user_id' => $this->user->id]);
 
     expect($this->user->resolvedNotifications()->count())->toBe(2);
 });
@@ -91,10 +91,10 @@ it('does not affect already resolved notifications', function () {
         (new GitHubSetupReminder)->forAction('github.install', ['user_id' => $this->user->id])
     );
 
-    (new InstallGitHubApp)->nudge(['user_id' => $this->user->id]);
+    (new InstallGitHubApp)->handle(['user_id' => $this->user->id]);
     $resolvedAt = $this->user->resolvedNotifications()->first()->resolved_at;
 
-    (new InstallGitHubApp)->nudge(['user_id' => $this->user->id]);
+    (new InstallGitHubApp)->handle(['user_id' => $this->user->id]);
 
     expect($this->user->resolvedNotifications()->first()->resolved_at)->toEqual($resolvedAt);
 });
@@ -102,7 +102,7 @@ it('does not affect already resolved notifications', function () {
 it('does not resolve notifications without an action key', function () {
     $this->user->notify(new GitHubSetupReminder);
 
-    (new InstallGitHubApp)->nudge(['user_id' => $this->user->id]);
+    (new InstallGitHubApp)->handle(['user_id' => $this->user->id]);
 
     $notification = $this->user->notifications()->first();
 
