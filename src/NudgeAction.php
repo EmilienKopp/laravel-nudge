@@ -10,10 +10,10 @@ use Splitstack\Nudge\Events\ActionExecuted;
 
 abstract class NudgeAction implements ResolvableAction
 {
-    final public function handle(array $params = []): mixed
+    final public function handle(mixed ...$params): mixed
     {
         $method = $this->resolveImplementation();
-        $result = $this->$method($params);
+        $result = $this->$method(...$params);
         ActionExecuted::dispatch($this->actionKey(), $params);
         return $result;
     }

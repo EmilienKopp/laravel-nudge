@@ -13,7 +13,7 @@ class ConnectSlack extends NudgeAction
         return 'slack.connect';
     }
 
-    protected function nudge(array $params): mixed
+    protected function nudge(mixed ...$params): mixed
     {
         return 'connected';
     }

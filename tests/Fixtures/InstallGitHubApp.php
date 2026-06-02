@@ -16,9 +16,9 @@ class InstallGitHubApp implements ResolvableAction
         return 'github.install';
     }
 
-    public function handle(array $params): mixed
+    public function handle(mixed ...$params): mixed
     {
-        $this->nudge($params);
+        $this->nudge(...$params);
 
         return null;
     }

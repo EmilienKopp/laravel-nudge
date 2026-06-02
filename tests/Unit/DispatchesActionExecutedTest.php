@@ -18,13 +18,13 @@ it('dispatches ActionExecuted when nudge() is called on a ResolvableAction', fun
 
         public function actionKey(): string { return 'test.action'; }
 
-        public function vodkatonic(array $params): void
+        public function vodkatonic(mixed ...$params): void
         {
-            $this->nudge($params);
+            $this->nudge(...$params);
         }
     };
 
-    $action->vodkatonic(['user_id' => 1]);
+    $action->vodkatonic(user_id: 1);
 
     Event::assertDispatched(ActionExecuted::class, fn ($e) =>
         $e->actionKey === 'test.action' && $e->params === ['user_id' => 1]

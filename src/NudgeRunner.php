@@ -10,6 +10,6 @@ class NudgeRunner
     {
         $instance = is_string($action) ? app($action) : $action;
 
-        return $instance->handle($params);
+        return $instance->handle(...$params);
     }
 }

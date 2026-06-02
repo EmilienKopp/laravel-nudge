@@ -15,7 +15,7 @@ uses(TestCase::class);
 it('calls nudge() convention and dispatches ActionExecuted via handle()', function () {
     Event::fake();
 
-    $result = (new ConnectSlack)->handle(['user_id' => 1]);
+    $result = (new ConnectSlack)->handle(user_id: 1);
 
     expect($result)->toBe('connected');
     Event::assertDispatched(ActionExecuted::class, fn ($e) =>
@@ -30,13 +30,13 @@ it('resolves implementation from #[Nudge] attribute', function () {
         public function actionKey(): string { return 'test.action'; }
 
         #[Nudge]
-        protected function doTheWork(array $params): string
+        protected function doTheWork(mixed ...$params): string
         {
             return 'worked';
         }
     };
 
-    $result = $action->handle(['user_id' => 1]);
+    $result = $action->handle(user_id: 1);
 
     expect($result)->toBe('worked');
     Event::assertDispatched(ActionExecuted::class);
