@@ -125,12 +125,12 @@ class InstallGitHubApp implements ResolvableAction
 {
     use DispatchesActionExecuted;
 
-    public function actionKey(): string
+    public function actionKey(): string // Add this method to declare the action key that resolves notifications
     {
         return 'github.install';
     }
 
-    public function vodkatonic(array $params): mixed  // keep your existing method name
+    public function doOrDoNotThereIsNoTry(array $params): mixed  // keep your existing method name
     {
         // your existing logic, untouched
 
@@ -143,7 +143,7 @@ class InstallGitHubApp implements ResolvableAction
 
 ```php
 // call site — completely unchanged
-(new InstallGitHubApp)->vodkatonic(['user_id' => $user->id]);
+(new InstallGitHubApp)->doOrDoNotThereIsNoTry(['user_id' => $user->id]);
 ```
 
 ---
