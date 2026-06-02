@@ -64,7 +64,7 @@ class InstallGitHubApp extends NudgeAction
         return 'github.install';
     }
 
-    protected function nudge(array $params): mixed
+    protected function nudge(int $user_id, int $installation_id): mixed
     {
         // your logic here — no event dispatch needed
     }
@@ -85,7 +85,7 @@ class InstallGitHubApp extends NudgeAction
     }
 
     #[Nudge]
-    protected function install(array $params): mixed
+    protected function install(int $user_id, int $installation_id): mixed
     {
         // your logic here
     }
@@ -104,8 +104,8 @@ Nudge::run(InstallGitHubApp::class, ['user_id' => $user->id]);
 // or 
 Nudge::run($myActionInstance, ['user_id' => $user->id]);
 
-// Direct call of handle on the instance
-$action->handle(['user_id' => $user->id]);
+// Direct call — use named args
+$action->handle(user_id: $user->id, installation_id: 88);
 ```
 
 ---
@@ -130,11 +130,11 @@ class InstallGitHubApp implements ResolvableAction
         return 'github.install';
     }
 
-    public function doOrDoNotThereIsNoTry(array $params): mixed  // keep your existing method name
+    public function doOrDoNotThereIsNoTry(string $action, array $installation, array $repositories): mixed
     {
         // your existing logic, untouched
 
-        $this->nudge($params); // ← only addition; fires ActionExecuted when done
+        $this->nudge(installation_id: $installation['id']); // ← only addition; pass only what's needed for matching
 
         return $result;
     }
@@ -143,7 +143,7 @@ class InstallGitHubApp implements ResolvableAction
 
 ```php
 // call site — completely unchanged
-(new InstallGitHubApp)->doOrDoNotThereIsNoTry(['user_id' => $user->id]);
+(new InstallGitHubApp)->doOrDoNotThereIsNoTry($action, $installation, $repositories);
 ```
 
 ---
