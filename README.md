@@ -217,6 +217,24 @@ The stored params are matched as a **subset** of the executed params. This means
 
 Extra keys in the executed params are ignored. Store only the params that must match.
 
+#### Deep matching
+
+By default matching is **shallow** — only top-level keys are compared. Set `match_params` to `'deep'` in `config/nudge.php` to enable recursive subset matching, useful when your action params contain nested arrays:
+
+```php
+// config/nudge.php
+'match_params' => 'deep',
+```
+
+```php
+// stored:   ['installation' => ['id' => 88]]
+// executed: ['installation' => ['id' => 88, 'account' => 'acme'], 'user_id' => 5]
+// shallow → does not resolve ✗  (array !== array strict comparison)
+// deep    → resolves ✓          (['id' => 88] is a subset of ['id' => 88, 'account' => 'acme'])
+```
+
+Matching is strict (`===`) at every level regardless of mode, so `'5'` and `5` are not considered equal.
+
 ## Querying
 
 Add `HasResolvableNotifications` to your notifiable model for convenience scopes:
