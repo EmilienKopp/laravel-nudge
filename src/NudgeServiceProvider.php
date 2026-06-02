@@ -9,6 +9,7 @@ use Illuminate\Support\ServiceProvider;
 use Splitstack\Nudge\Events\ActionExecuted;
 use Splitstack\Nudge\Listeners\ResolveNotificationsOnActionQueued;
 use Splitstack\Nudge\Listeners\ResolveNotificationsOnActionSync;
+use Splitstack\Nudge\NudgeRunner;
 
 class NudgeServiceProvider extends ServiceProvider
 {
@@ -35,5 +36,7 @@ class NudgeServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nudge.php', 'nudge');
+
+        $this->app->singleton(NudgeRunner::class);
     }
 }

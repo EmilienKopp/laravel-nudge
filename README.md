@@ -1,6 +1,5 @@
 # Laravel Nudge
 
-
 ![Tests](https://img.shields.io/github/actions/workflow/status/emilienkopp/laravel-nudge/tests.yml?label=tests)
 ![PHP Version](https://img.shields.io/badge/php-^8.2-blue.svg?style=flat-square)
 ![Laravel Version](https://img.shields.io/badge/laravel-^11.0-orange.svg?style=flat-square)
@@ -38,8 +37,8 @@ User is notified to install the GitHub App
   └─ notification stored with action_key = "github.install", user_id = 5
 
 User installs the GitHub App (via webhook, OAuth callback, CLI — anywhere)
-  └─ (new InstallGitHubApp)->handle(['user_id' => 5, 'installation_id' => 88])
-       └─ $this->nudge($params) fires ActionExecuted("github.install", [...])
+  └─ nudge(InstallGitHubApp::class, ['user_id' => 5, 'installation_id' => 88])
+       └─ fires ActionExecuted("github.install", [...])
             └─ listener finds the notification, stamps resolved_at
 ```
 
@@ -47,11 +46,80 @@ The controller, the webhook handler, and the notification have no knowledge of e
 
 ## Actions
 
-Implement `ResolvableAction`, use the `DispatchesActionExecuted` trait, and call `$this->nudge($params)` from within your handler when the action completes. The method can be named anything — no renaming of existing code required.
+There are two ways to make an action class resolvable, depending on whether it already exists or is being written from scratch.
+
+---
+
+### New action classes — extend `NudgeAction`
+
+If you are writing an action class from scratch, extend `NudgeAction`. Implement your logic in a `protected nudge()` method (convention) or in any method marked `#[Nudge]` (for a custom name). The `handle()` entry point, event dispatch, and resolution are all handled for you.
 
 ```php
-use Splitstack\Nudge\Contracts\ResolvableAction;
+use Splitstack\Nudge\NudgeAction;
+
+class InstallGitHubApp extends NudgeAction
+{
+    public function actionKey(): string
+    {
+        return 'github.install';
+    }
+
+    protected function nudge(array $params): mixed
+    {
+        // your logic here — no event dispatch needed
+    }
+}
+```
+
+If you prefer a different method name, mark it with `#[Nudge]`:
+
+```php
+use Splitstack\Nudge\Attributes\Nudge;
+use Splitstack\Nudge\NudgeAction;
+
+class InstallGitHubApp extends NudgeAction
+{
+    public function actionKey(): string
+    {
+        return 'github.install';
+    }
+
+    #[Nudge]
+    protected function install(array $params): mixed
+    {
+        // your logic here
+    }
+}
+```
+
+**Call sites** — pick whichever style fits your codebase:
+
+```php
+// Global helper
+nudge(InstallGitHubApp::class, ['user_id' => $user->id]);
+
+// Facade
+use Splitstack\Nudge\Facades\Nudge;
+Nudge::run(InstallGitHubApp::class, ['user_id' => $user->id]);
+// or 
+Nudge::run($myActionInstance, ['user_id' => $user->id]);
+
+// Direct call of handle on the instance
+$action->handle(['user_id' => $user->id]);
+```
+
+---
+
+### Existing action classes — use the trait
+
+If you have an action class that already exists and already has its own call sites, you do not need to rewrite call sites.
+(You're free to do so if you want, of course. In that case refer to the "New action classes" section above)
+
+Implement `ResolvableAction`, add the `DispatchesActionExecuted` trait, and drop `$this->nudge($params)` at the point in your method where the action completes. Your call site stays exactly as it was.
+
+```php
 use Splitstack\Nudge\Concerns\DispatchesActionExecuted;
+use Splitstack\Nudge\Contracts\ResolvableAction;
 
 class InstallGitHubApp implements ResolvableAction
 {
@@ -62,22 +130,23 @@ class InstallGitHubApp implements ResolvableAction
         return 'github.install';
     }
 
-    public function handle(array $params): void
+    public function vodkatonic(array $params): mixed  // keep your existing method name
     {
-        // your existing logic, name this method whatever you want
+        // your existing logic, untouched
 
-        $this->nudge($params); // fires ActionExecuted when the action completes
+        $this->nudge($params); // ← only addition; fires ActionExecuted when done
+
+        return $result;
     }
 }
 ```
 
-Call it however you normally would — no wrapper method needed:
-
 ```php
-(new InstallGitHubApp)->handle(['user_id' => $user->id, 'installation_id' => 88]);
+// call site — completely unchanged
+(new InstallGitHubApp)->vodkatonic(['user_id' => $user->id]);
 ```
 
-`nudge()` only fires if the class implements `ResolvableAction`. You can use the trait on non-resolvable actions too — `nudge()` becomes a no-op.
+---
 
 You can also dispatch the event manually as an escape hatch — useful for actions you don't own:
 
@@ -205,43 +274,7 @@ class MyNotification extends ActionableNotification
 
 ## Upgrading from < 0.6.0
 
-The `execute()` entry point and the requirement to name your handler `handle()` have been removed. The new design lets you keep whatever method name you already have — just add `$this->nudge($params)` inside it.
-
-**Before:**
-```php
-class InstallGitHubApp implements ResolvableAction
-{
-    use DispatchesActionExecuted;
-
-    protected function handle(array $params): void
-    {
-        // logic
-    }
-}
-
-// call site
-(new InstallGitHubApp)->execute($params);
-```
-
-**After:**
-```php
-class InstallGitHubApp implements ResolvableAction
-{
-    use DispatchesActionExecuted;
-
-    public function handle(array $params): void  // or vodkatonic(), or __invoke(), or anything
-    {
-        // same logic, untouched
-
-        $this->nudge($params);
-    }
-}
-
-// call site — unchanged, call your method directly
-(new InstallGitHubApp)->handle($params);
-```
-
-`execute()` still exists but is deprecated and will be removed in a future release. It emits `E_USER_DEPRECATED` to help you find remaining call sites.
+The old `execute()` entry point and the requirement to name your handler `handle()` have been removed in favour of the two-path API above. `execute()` still works but emits `E_USER_DEPRECATED` — follow the deprecation message to migrate at your own pace.
 
 ## Caveats
 
