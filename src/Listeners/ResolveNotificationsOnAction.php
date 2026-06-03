@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Splitstack\Nudge\Listeners;
 
 use Splitstack\Nudge\Events\ActionExecuted;
+use Splitstack\Nudge\Events\NotificationsResolved;
 
 readonly class ResolveNotificationsOnAction
 {
@@ -17,15 +18,17 @@ readonly class ResolveNotificationsOnAction
             ->get();
 
         $now = now();
+        $resolvedNotificationIds = [];
         foreach ($candidates as $notification) {
             if ($this->paramsMatch($notification->data['_action_params'] ?? [], $event->params)) {
                 $notification->update(['resolved_at' => $now]);
+                $resolvedNotificationIds[] = $notification->id;
             }
         }
 
         // Dispatch a broadcastable event for any real-time UI updates if necessary
-        if (config('nudge.broadcast_notifications')) {
-            event(new \Splitstack\Nudge\Events\NotificationsResolved($candidates->pluck('id')->toArray()));
+        if (config('nudge.broadcast_notifications') && $resolvedNotificationIds !== []) {
+            event(new NotificationsResolved($resolvedNotificationIds));
         }
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Splitstack\Nudge\Events\ActionExecuted;
+use Splitstack\Nudge\Events\NotificationsResolved;
 use Splitstack\Nudge\Listeners\ResolveNotificationsOnActionQueued;
 use Splitstack\Nudge\Tests\Fixtures\GitHubSetupReminder;
 use Splitstack\Nudge\Tests\Fixtures\InstallGitHubApp;
@@ -71,6 +72,33 @@ it('only resolves notifications whose params are a subset of the executed params
 
     expect($this->user->resolvedNotifications()->count())->toBe(1)
         ->and($otherUser->pendingNotifications()->count())->toBe(1);
+});
+
+it('broadcasts only resolved notifications for matching params', function () {
+    config(['nudge.broadcast_notifications' => true]);
+    Event::fake([NotificationsResolved::class]);
+
+    $otherUser = User::create(['name' => 'Bob', 'email' => 'bob@example.com', 'password' => 'secret']);
+
+    $this->user->notify(
+        (new GitHubSetupReminder)->forAction('github.install', ['user_id' => $this->user->id])
+    );
+    $otherUser->notify(
+        (new GitHubSetupReminder)->forAction('github.install', ['user_id' => $otherUser->id])
+    );
+
+    $resolvedNotificationId = $this->user->pendingNotifications()->first()->id;
+    $otherNotificationId = $otherUser->pendingNotifications()->first()->id;
+
+    (new InstallGitHubApp)->handle(user_id: $this->user->id, installation_id: 88);
+
+    expect($this->user->resolvedNotifications()->count())->toBe(1)
+        ->and($otherUser->pendingNotifications()->count())->toBe(1);
+
+    Event::assertDispatched(NotificationsResolved::class, function (NotificationsResolved $event) use ($resolvedNotificationId, $otherNotificationId) {
+        return $event->notificationIds === [$resolvedNotificationId]
+            && ! in_array($otherNotificationId, $event->notificationIds, true);
+    });
 });
 
 it('resolves all pending notifications for the same action and params', function () {
